@@ -2,53 +2,54 @@ package main
 
 import (
 	"fmt"
-	"flag"
+	"strings"
 	"os"
+	"github.com/areller/dnmk/pkg/cli"
 )
 
-type Command interface {
-	GetName() string
-	GetDescription() string
-	Run(io *IO, args []string, flags *flag.FlagSet)
-}
+func buildArgsAndFlags() ([]string, map[string]interface{}) {
+	var args []string
+    flags := make(map[string]interface{})
 
-func addCommand(commands map[string]Command, cmd Command) {
-	commands[cmd.GetName()] = cmd
+	for _, arg := range os.Args[1:] {
+		if strings.HasPrefix(arg, "--") {
+			withoutDash := arg[2:]
+			eqIdx := strings.Index(withoutDash, "=")
+
+			if eqIdx == -1 {
+				flags[withoutDash] = true
+			} else {
+				key := withoutDash[0:eqIdx]
+				eqIdx++
+				value := withoutDash[eqIdx:]
+				flags[key] = value
+			}
+		} else if strings.HasPrefix(arg, "-") {
+			withoutDash := arg[1:]
+			eqIdx := strings.Index(withoutDash, "=")
+
+			if eqIdx == -1 {
+				for _, flag := range withoutDash {
+					flags[fmt.Sprintf("%c", flag)] = true
+				}
+			} else {
+				keys := withoutDash[0:eqIdx]
+				eqIdx++
+				value := withoutDash[eqIdx:]
+
+				for _, flag := range keys {
+					flags[fmt.Sprintf("%c", flag)] = value
+				}
+			}
+		} else {
+			args = append(args, arg)
+		}
+	}
+
+	return args, flags
 }
 
 func main() {
-	cmds := make(map[string]Command)
-
-	addCommand(cmds, NewHelpCommand(cmds))
-	addCommand(cmds, NewNewCommand())
-
-	verbose := flag.Bool("v", false, "Verbose output")
-	quiet := flag.Bool("q", false, "Quiet output")
-	flag.Parse()
-
-	args := flag.Args()
-
-	var level int
-	if *verbose && *quiet {
-		fmt.Fprintln(os.Stderr, "Can't run verbosly and quietly at the same time")
-		return
-	} else if *verbose && !*quiet {
-		level = Verbose
-	} else if !*verbose && *quiet {
-		level = Minimal
-	} else {
-		level = Normal
-	}
-
-	if len(args) == 0 {
-		cmds["help"].Run(NewIO(level), []string{}, flag.CommandLine)
-	} else {
-		cmd, ok := cmds[args[0]]
-		if !ok {
-			fmt.Fprintln(os.Stderr, "Invalid command '" + args[0] + "'")
-			return
-		}
-
-		cmd.Run(NewIO(level), args[1:], flag.CommandLine)
-	}
+	app := cli.New()
+	app.Run(buildArgsAndFlags())
 }

@@ -1,4 +1,4 @@
-package main
+package env
 
 import (
 	"os"
@@ -30,7 +30,7 @@ func (io *IO) Error(level int, err error) {
 	}
 }
 
-func NewIO(wantedLevel int) *IO {
+func newIO(wantedLevel int) *IO {
 	return &IO{
 		wantedLevel: wantedLevel,
 	}

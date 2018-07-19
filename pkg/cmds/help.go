@@ -1,7 +1,7 @@
-package main
+package cmds
 
 import (
-	"flag"
+	"github.com/areller/dnmk/pkg/env"
 )
 
 type HelpCommand struct {
@@ -16,10 +16,10 @@ func (hc *HelpCommand) GetDescription() string {
 	return "Prints version and all other commands"
 }
 
-func (hc *HelpCommand) Run(io *IO, args []string, flags *flag.FlagSet) {
-	io.Print(Minimal, "dnmk version 0.1")
+func (hc *HelpCommand) Run(args []string, flags map[string]interface{}, envi *env.Env) {
+	envi.IO.Print(env.Minimal, "dnmk version 0.1")
 	for name, cmd := range hc.cmds {
-		io.Print(Minimal, name + " - " + cmd.GetDescription())
+		envi.IO.Print(env.Minimal, name + " - " + cmd.GetDescription())
 	}
 }
 

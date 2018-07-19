@@ -1,7 +1,7 @@
-package main
+package cmds
 
 import (
-	"flag"
+	"github.com/areller/dnmk/pkg/env"
 )
 
 type NewCommand struct {
@@ -16,8 +16,8 @@ func (nc *NewCommand) GetDescription() string {
 	return "Creates new project from given template"
 }
 
-func (nc *NewCommand) Run(io *IO, args []string, flags *flag.FlagSet) {
-	io.Print(Minimal, *flags.String("name", "noName", "sdf"))
+func (nc *NewCommand) Run(args []string, flags map[string]interface{}, envi *env.Env) {
+	envi.IO.Print(env.Minimal, flags["name"].(string))
 }
 
 func NewNewCommand() *NewCommand {
